@@ -1,15 +1,54 @@
 {
-  description = "A very basic flake";
+  description = "Go Development Environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   };
 
-  outputs = { self, nixpkgs }: {
+  outputs =
+    {
+      nixpkgs,
+      ...
+    }:
+    let
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
 
-    packages.x86_64-linux.hello = nixpkgs.legacyPackages.x86_64-linux.hello;
+      forEachSystem = nixpkgs.lib.genAttrs supportedSystems;
+    in
+    {
+      devShell = forEachSystem (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
+        in
+        pkgs.mkShell {
+          packages = with pkgs; [
+            go
+            gopls
+          ];
+        }
+      );
 
-    packages.x86_64-linux.default = self.packages.x86_64-linux.hello;
+      defaultPackage = forEachSystem (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
+        in
+        pkgs.buildGoPackage {
+          pname = "nix-start";
+          version = "0.0.0";
 
-  };
+          src = ./.;
+          vendorHash = pkgs.lib.fakeSha256;
+        }
+      );
+    };
+
 }
