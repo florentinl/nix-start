@@ -50,7 +50,7 @@
 
               _nix_start() {
                   local languages
-                  languages=(\$(nix flake show github:florentinl/nix-start --json | ${pkgs.lib.getExe pkgs.jq} -r '.templates | keys.[]'))
+                  languages=(\$(nix flake show github:florentinl/nix-start --json --quiet 2>/dev/null | ${pkgs.lib.getExe pkgs.jq} -r '.templates | keys.[]'))
 
                   _describe 'values' languages
               }
@@ -58,6 +58,12 @@
               compdef _nix_start nix-start
               EOF
             '';
+
+            meta = with pkgs.lib; {
+              description = "Nix start plugin";
+              homepage = "https://github.com/florentinl/nix-start";
+              maintainers = with maintainers; [ florentin ];
+            };
           }
         );
 
